@@ -9,3 +9,10 @@ Gem mittsu: https://github.com/jellymann/mittsu
 ./solar.rb
 ```
 
+# Background
+
+![Gravitational Force Equation](https://raw.githubusercontent.com/tomlobato/solar_system_mechanics/master/assets/gravity.png)
+
+
+
+      
