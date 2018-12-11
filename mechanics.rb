@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-class SolarCore
+class Mechanics
     G = 6.67408e-11
     UA = 1.496e11
 
@@ -132,9 +132,7 @@ class SolarCore
             }
         end
 
-        # p info[:earth]
         info
     end
 end
 
-# SolarCore.new.load_info

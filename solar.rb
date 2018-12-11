@@ -1,15 +1,15 @@
 #!/usr/bin/env ruby
 
 require 'mittsu'
-require_relative './solar_system_core'
+require_relative './mechanics'
 
-class SolGraph
+class Solar
     SCREEN_WIDTH = 1600
     SCREEN_HEIGHT = 1200
     ASPECT = SCREEN_WIDTH.to_f / SCREEN_HEIGHT.to_f
 
-    def initialize solar_core
-        @solar_core = solar_core
+    def initialize mechanics
+        @mechanics = mechanics
         @scene = Mittsu::Scene.new
         @camera = Mittsu::PerspectiveCamera.new(75.0, ASPECT, 0.1, 1000.0)
         @camera.position.z = 30.0
@@ -23,7 +23,7 @@ class SolGraph
 
         @aobjs = []
 
-        @solar_core.info.each_pair do |k, info|
+        @mechanics.info.each_pair do |k, info|
             # jupiter_diameter = 142_984_000.0
             earth_diameter = 12_756_000.0
             diameter = info[:diameter] / earth_diameter
@@ -31,7 +31,7 @@ class SolGraph
 
             container = Mittsu::Object3D.new
             geometry = Mittsu::SphereGeometry.new(diameter, 32, 16)
-            texture = Mittsu::ImageUtils.load_texture(File.join File.dirname(__FILE__), "#{k}.png")
+            texture = Mittsu::ImageUtils.load_texture(File.join File.dirname(__FILE__), "./assets/#{k}.png")
             material = Mittsu::MeshLambertMaterial.new(map: texture) #, opacity: 0.3, transparent: true)
             aobj = Mittsu::Mesh.new(geometry, material)
             container.add(aobj)
@@ -44,9 +44,9 @@ class SolGraph
     def run
         build
 
-        dat = @solar_core.dat
+        dat = @mechanics.dat
         Thread.new do
-            @solar_core.run
+            @mechanics.run
         end
 
         @renderer.window.on_resize do |width, height|
@@ -56,7 +56,7 @@ class SolGraph
         end
 
         biggest = 0 # SolarCore::UA
-        @solar_core.info.each_value{|v| biggest = v[:sun_distance] if v[:sun_distance] > biggest }
+        @mechanics.info.each_value{|v| biggest = v[:sun_distance] if v[:sun_distance] > biggest }
         div = biggest / 20.0
 
         @renderer.window.run do
@@ -74,5 +74,5 @@ class SolGraph
 
 end
 
-solar_core = SolarCore.new
-SolGraph.new(solar_core).run
+mechanics = Mechanics.new
+Solar.new(mechanics).run
