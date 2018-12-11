@@ -3,7 +3,7 @@
 class Mechanics
     G = 6.67408e-11
     # MOON MERCURY VENUS EARTH MARS JUPITER SATURN URANUS NEPTUNE PLUTO
-    EXCLUDE_ASTROS = %w(MOON JUPITER SATURN URANUS NEPTUNE PLUTO)
+    EXCLUDE_ASTROS = %w(MOON)
     DT = 300 # Time step between loop iterations
     LOOP_WAIT = 0.00001
     DEBUG = false
@@ -24,13 +24,19 @@ class Mechanics
     def run
         didx = 0
 
+        start_watcher
+        stat_cnt = 0
+        stat = 0
         loop do |loop_num|
+            t0 = Time.now if DEBUG
             dat  = @dat[didx]
             dat2 = @dat[didx == 0 ? 1 : 0]
             
             (0...dat.size).each do |i|
                 # Calculates acceleration of astro i 
                 # caused by all other astros
+                # (for faster computation it sums the delta velocity 
+                # per axis instead pure acceleration)
                 dvx = 0
                 dvy = 0
                 dvz = 0
@@ -42,12 +48,12 @@ class Mechanics
                     dy = dat[i][3] - dat[j][3]
                     dz = dat[i][4] - dat[j][4]
 
-                    factor = -1 * G * dat[j][1] / (dx**2 + dy**2 + dz**2)**1.5
+                    factor = -1 * G * dat[j][1] * DT / (dx**2 + dy**2 + dz**2)**1.5
 
                     # Delta velocity for each axis
-                    dvx += factor * dx * DT 
-                    dvy += factor * dy * DT
-                    dvz += factor * dz * DT
+                    dvx += factor * dx
+                    dvy += factor * dy
+                    dvz += factor * dz
                 end
 
                 # Velocity change for i
@@ -62,6 +68,11 @@ class Mechanics
             end
             
             didx = didx == 0 ? 1 : 0
+            if DEBUG
+                stat += (Time.now - t0)
+                stat_cnt += 1
+                puts (1e6*stat/stat_cnt) if stat_cnt % 1e5 == 0
+            end
             sleep LOOP_WAIT
         end
     end
@@ -113,23 +124,13 @@ class Mechanics
         mat.transpose.each do |line|
             next if EXCLUDE_ASTROS.include?(line[0])
 
-            mass                = line[1].to_f
-            diameter            = line[2].to_f
-            distance_to_sun     = line[8].to_f
-            orbit_speed         = line[12].to_f
-            orbit_inclination   = line[13].to_f
-
-            mass            *= 1e24 # to kg
-            diameter        *= 1e3  # to m
-            distance_to_sun *= 1e9  # to m
-            orbit_speed     *= 1e3  # to m/s
-
             info[line[0].downcase.to_sym] = {
                 name:               line[0].capitalize,
-                mass:               mass,
-                diameter:           diameter,
-                distance_to_sun:    distance_to_sun,
-                orbit_speed:        orbit_speed,
+                mass:               line[1].to_f  * 1e24, # to kg
+                diameter:           line[2].to_f  * 1e3,  # to m
+                distance_to_sun:    line[8].to_f  * 1e9,  # to m
+                orbit_speed:        line[12].to_f * 1e3,  # to m/s
+                orbit_inclination:  line[13].to_f,
             }
         end
 
@@ -165,6 +166,20 @@ class Mechanics
         # and writes to the other, then inverts the index for 
         # the next iteration
         [dat.dup, dat.dup]        
+    end
+
+    def start_watcher
+        @init = @dat[0].dup
+    end
+
+    def report_changes
+        @dat[0].each{|f| print "#{f[0]}\t" }        
+        @dat[0].each_with_index{|f, i| report f, i }        
+    end
+
+    def report f, i
+        @init[i][2]
+        print "#{rep}\t"
     end
 
 end
