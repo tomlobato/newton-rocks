@@ -13,7 +13,7 @@ Gem mittsu: https://github.com/jellymann/mittsu
 ./solar.rb
 ```
 
-# Ref
+# Refs
 
 [Feynman Lectures - Planetary motions](http://www.feynmanlectures.caltech.edu/I_09.html#Ch9-S7)
 
