@@ -7,6 +7,19 @@ class Solar
     SCREEN_WIDTH = 1600
     SCREEN_HEIGHT = 1200
     ASPECT = SCREEN_WIDTH.to_f / SCREEN_HEIGHT.to_f
+    DIAMETER_SCALE = 2e7
+    DIAMETER_FACTOR = {
+        sun:     1e-1,
+        mercury: 1,
+        venus:   1,
+        earth:   1,
+        mars:    1,
+        jupiter: 1,
+        saturn:  1,
+        uranus:  1,
+        neptune: 1,
+        pluto:   1,
+    }
 
     def initialize mechanics
         @mechanics = mechanics
@@ -24,10 +37,7 @@ class Solar
         @aobjs = []
 
         @mechanics.info.each_pair do |k, info|
-            # jupiter_diameter = 142_984_000.0
-            earth_diameter = 12_756_000.0
-            diameter = info[:diameter] / earth_diameter
-            diameter = 1.2 if k == :sun
+            diameter = DIAMETER_FACTOR[k] * info[:diameter] / DIAMETER_SCALE
 
             container = Mittsu::Object3D.new
             geometry = Mittsu::SphereGeometry.new(diameter, 32, 16)
@@ -55,16 +65,20 @@ class Solar
             @camera.update_projection_matrix
         end
 
-        biggest = 0 # SolarCore::UA
-        @mechanics.info.each_value{|v| biggest = v[:sun_distance] if v[:sun_distance] > biggest }
-        div = biggest / 20.0
+        largest_orbit = 0
+        @mechanics.info.each_value{|v| 
+            if v[:distance_to_sun] > largest_orbit
+                largest_orbit = v[:distance_to_sun]
+            end
+        } 
+        norm = largest_orbit / 20.0
 
         @renderer.window.run do
             @aobjs.each_with_index do |aobj, idx|
                 aobj.position.set(      
-                    dat[0][idx][2] / div,
-                    dat[0][idx][3] / div,
-                    dat[0][idx][4] / div 
+                    dat[0][idx][2] / norm,
+                    dat[0][idx][3] / norm,
+                    dat[0][idx][4] / norm 
                 )
             end
             @renderer.render(@scene, @camera)

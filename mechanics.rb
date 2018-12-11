@@ -2,17 +2,14 @@
 
 class Mechanics
     G = 6.67408e-11
-    UA = 1.496e11
+    # MOON MERCURY VENUS EARTH MARS JUPITER SATURN URANUS NEPTUNE PLUTO
+    EXCLUDE_ASTROS = %w(MOON JUPITER SATURN URANUS NEPTUNE PLUTO)
+    DT = 100 # Time step between loop iterations
+    LOOP_WAIT = 0.00001
 
     def initialize
         @info = load_info        
-        @dat = []
-        @info.each_pair do |k, v|
-            @dat << [v[:name], v[:mass], 
-                     v[:sun_distance], 0, 0, # x y z
-                     0, v[:orbit_speed], 0]  # v
-        end
-        @dat = [@dat.dup, @dat.dup]
+        @dat = load_dat
     end
 
     def dat
@@ -24,48 +21,51 @@ class Mechanics
     end
 
     def run
-        year_in = 20
-        total_time = 365 * 24 * 3600.0 # 1 ano
-        t = 0.0
-        dt = 100
         didx = 0
 
-        # (total_time/dt).to_i.times 
         loop do |loop_num|
-            (0...@dat[0].size).each do |i|
-                ax = 0
-                ay = 0
-                az = 0
-                (0...@dat[0].size).each do |j|
+            dat  = @dat[didx]
+            dat2 = @dat[didx == 0 ? 1 : 0]
+            
+            (0...dat.size).each do |i|
+                # Calculates acceleration of astro i 
+                # caused by all other astros
+                dvx = 0
+                dvy = 0
+                dvz = 0
+
+                (0...dat.size).each do |j|
                     next if i == j
-                    d = ( (@dat[didx][i][2]-@dat[didx][j][2])**2 + 
-                        (@dat[didx][i][3]-@dat[didx][j][3])**2 + 
-                        (@dat[didx][i][4]-@dat[didx][j][4])**2 )**0.5
-                    ax += -1 * G * @dat[didx][j][1] * (@dat[didx][i][2]-@dat[didx][j][2]) / d**3
-                    ay += -1 * G * @dat[didx][j][1] * (@dat[didx][i][3]-@dat[didx][j][3]) / d**3
-                    az += -1 * G * @dat[didx][j][1] * (@dat[didx][i][4]-@dat[didx][j][4]) / d**3
+
+                    dx = dat[i][2] - dat[j][2]
+                    dy = dat[i][3] - dat[j][3]
+                    dz = dat[i][4] - dat[j][4]
+
+                    factor = -1 * G * dat[j][1] / (dx**2 + dy**2 + dz**2)**1.5
+
+                    # Delta velocity for each axis
+                    dvx += factor * dx * DT 
+                    dvy += factor * dy * DT
+                    dvz += factor * dz * DT
                 end
-                didx2 = didx == 0 ? 1 : 0
 
-                @dat[didx2][i][5] = @dat[didx][i][5] + ax * dt
-                @dat[didx2][i][6] = @dat[didx][i][6] + ay * dt
-                @dat[didx2][i][7] = @dat[didx][i][7] + az * dt
+                # Velocity change for i
+                dat2[i][5] = dat[i][5] + dvx
+                dat2[i][6] = dat[i][6] + dvy
+                dat2[i][7] = dat[i][7] + dvz
 
-                @dat[didx2][i][2] = @dat[didx][i][2] + (@dat[didx][i][5] + ax * dt / 2.0) * dt
-                @dat[didx2][i][3] = @dat[didx][i][3] + (@dat[didx][i][6] + ay * dt / 2.0) * dt
-                @dat[didx2][i][4] = @dat[didx][i][4] + (@dat[didx][i][7] + az * dt / 2.0) * dt
+                # Position change for i
+                dat2[i][2] = dat[i][2] + (dat[i][5] + dvx/2) * DT
+                dat2[i][3] = dat[i][3] + (dat[i][6] + dvy/2) * DT
+                dat2[i][4] = dat[i][4] + (dat[i][7] + dvz/2) * DT
             end
-            t += dt
-            # break if t >= total_time
-            # puts loop_num if loop_num % 100_000 == 0
+            
             didx = didx == 0 ? 1 : 0
-            sleep 0.0001
+            sleep LOOP_WAIT
         end
-
-        puts "final:"
-        puts @dat[didx]
-        puts "/final:"
     end
+
+    private
 
     def load_info
         info = {}
@@ -75,7 +75,7 @@ class Mechanics
             name: 'Sun',
             mass: 1.9885e30,
             diameter: 696_392_000,
-            sun_distance: 0,
+            distance_to_sun: 0,
             orbit_speed: 0,
         }
 
@@ -110,29 +110,49 @@ class Mechanics
         end
 
         mat.transpose.each do |line|
-            next if %w(MOON JUPITER SATURN URANUS NEPTUNE PLUTO).include?(line[0])
-            # MERCURY VENUS EARTH MARS     
-            mass = line[1].to_f
-            diameter = line[2].to_f
-            sun_distance = line[8].to_f
-            orbit_speed = line[12].to_f
-            orbit_inclination = line[13].to_f
+            next if EXCLUDE_ASTROS.include?(line[0])
 
-            mass *= 1e24 # kg
-            diameter *= 1e3 # m
-            sun_distance *= 1e9 # m
-            orbit_speed *= 1e3 # m/s
+            mass                = line[1].to_f
+            diameter            = line[2].to_f
+            distance_to_sun     = line[8].to_f
+            orbit_speed         = line[12].to_f
+            orbit_inclination   = line[13].to_f
+
+            mass            *= 1e24 # to kg
+            diameter        *= 1e3  # to m
+            distance_to_sun *= 1e9  # to m
+            orbit_speed     *= 1e3  # to m/s
 
             info[line[0].downcase.to_sym] = {
-                name: line[0].capitalize,
-                mass: mass,
-                diameter: diameter,
-                sun_distance: sun_distance,
-                orbit_speed: orbit_speed,
+                name:               line[0].capitalize,
+                mass:               mass,
+                diameter:           diameter,
+                distance_to_sun:    distance_to_sun,
+                orbit_speed:        orbit_speed,
             }
         end
 
         info
     end
+
+    def load_dat
+        dat = []
+
+        # Sets array @dat with astro informations and initial states
+        @info.each_pair do |k, v|
+            dat << [
+                v[:name], 
+                v[:mass], 
+                v[:distance_to_sun], 0              , 0, # x  y  z 
+                0                  , v[:orbit_speed], 0] # Vx Vy Vz
+        end
+
+        # Duplicates dat. 
+        # Each loop iteration reads from one copy 
+        # and writes to the other one, then inverts the index for 
+        # the next iteration
+        [dat.dup, dat.dup]        
+    end
+
 end
 
