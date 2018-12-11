@@ -1,4 +1,6 @@
 
+Sample:
+
 ![Sample Animation](https://raw.githubusercontent.com/tomlobato/solar_system_mechanics/master/assets/sample.gif)
 
 
