@@ -4,8 +4,9 @@ class Mechanics
     G = 6.67408e-11
     # MOON MERCURY VENUS EARTH MARS JUPITER SATURN URANUS NEPTUNE PLUTO
     EXCLUDE_ASTROS = %w(MOON JUPITER SATURN URANUS NEPTUNE PLUTO)
-    DT = 100 # Time step between loop iterations
+    DT = 300 # Time step between loop iterations
     LOOP_WAIT = 0.00001
+    DEBUG = false
 
     def initialize
         @info = load_info        
@@ -81,7 +82,7 @@ class Mechanics
 
         # https://nssdc.gsfc.nasa.gov/planetary/factsheet/
         raw = 
-            "MERCURY 	 VENUS 	 EARTH 	 MOON 	 MARS 	 JUPITER 	 SATURN 	 URANUS 	 NEPTUNE 	 PLUTO 
+            "MERCURY	VENUS	EARTH	MOON	MARS	JUPITER	SATURN	URANUS	NEPTUNE	PLUTO	
             0.330	4.87	5.97	0.073	0.642	1898	568	86.8	102	0.0146
             4879	12,104	12,756	3475	6792	142,984	120,536	51,118	49,528	2370
             5427	5243	5514	3340	3933	1326	687	1271	1638	2095
@@ -132,6 +133,11 @@ class Mechanics
             }
         end
 
+        if DEBUG
+            require 'json'
+            puts info.to_json
+        end
+
         info
     end
 
@@ -141,15 +147,22 @@ class Mechanics
         # Sets array @dat with astro informations and initial states
         @info.each_pair do |k, v|
             dat << [
-                v[:name], 
-                v[:mass], 
-                v[:distance_to_sun], 0              , 0, # x  y  z 
-                0                  , v[:orbit_speed], 0] # Vx Vy Vz
+                v[:name],               # 0 name
+                v[:mass],               # 1 mass
+
+                v[:distance_to_sun],    # 2 x coordinate
+                0,                      # 3 y coordinate
+                0,                      # 4 z coordinate
+
+                0,                      # 5 x speed
+                v[:orbit_speed],        # 6 y speed
+                0                       # 7 z speed
+            ]
         end
 
         # Duplicates dat. 
         # Each loop iteration reads from one copy 
-        # and writes to the other one, then inverts the index for 
+        # and writes to the other, then inverts the index for 
         # the next iteration
         [dat.dup, dat.dup]        
     end

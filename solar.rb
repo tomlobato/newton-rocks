@@ -7,12 +7,13 @@ class Solar
     SCREEN_WIDTH = 1600
     SCREEN_HEIGHT = 1200
     ASPECT = SCREEN_WIDTH.to_f / SCREEN_HEIGHT.to_f
-    DIAMETER_SCALE = 2e7
+    DIAMETER_SCALE = 1e7
     DIAMETER_FACTOR = {
-        sun:     1e-1,
+        sun:     4e-2,
         mercury: 1,
         venus:   1,
         earth:   1,
+        moon:    1,
         mars:    1,
         jupiter: 1,
         saturn:  1,
@@ -34,20 +35,19 @@ class Solar
         light.position.z = 0
         @scene.add(light)
 
-        @aobjs = []
+        @astros = []
 
         @mechanics.info.each_pair do |k, info|
             diameter = DIAMETER_FACTOR[k] * info[:diameter] / DIAMETER_SCALE
 
-            container = Mittsu::Object3D.new
             geometry = Mittsu::SphereGeometry.new(diameter, 32, 16)
             texture = Mittsu::ImageUtils.load_texture(File.join File.dirname(__FILE__), "./assets/#{k}.png")
-            material = Mittsu::MeshLambertMaterial.new(map: texture) #, opacity: 0.3, transparent: true)
-            aobj = Mittsu::Mesh.new(geometry, material)
-            container.add(aobj)
-            @scene.add(container)
+            material = Mittsu::MeshLambertMaterial.new(map: texture)
 
-            @aobjs << aobj
+            astro = Mittsu::Mesh.new(geometry, material)
+            @scene.add(astro)
+
+            @astros << astro
         end
     end
 
@@ -65,25 +65,32 @@ class Solar
             @camera.update_projection_matrix
         end
 
+        norm = normalize_orbit
+
+        @renderer.window.run do
+            @astros.each_with_index do |astro, idx|
+                astro.position.set(      
+                    dat[0][idx][2] / norm,
+                    dat[0][idx][3] / norm,
+                    dat[0][idx][4] / norm 
+                )
+                astro.rotation.z += 0.03
+            end
+            @renderer.render(@scene, @camera)
+            sleep 0.01
+        end
+    end
+
+    private
+
+    def normalize_orbit
         largest_orbit = 0
         @mechanics.info.each_value{|v| 
             if v[:distance_to_sun] > largest_orbit
                 largest_orbit = v[:distance_to_sun]
             end
         } 
-        norm = largest_orbit / 20.0
-
-        @renderer.window.run do
-            @aobjs.each_with_index do |aobj, idx|
-                aobj.position.set(      
-                    dat[0][idx][2] / norm,
-                    dat[0][idx][3] / norm,
-                    dat[0][idx][4] / norm 
-                )
-            end
-            @renderer.render(@scene, @camera)
-            sleep 0.01
-        end
+        largest_orbit / 20.0        
     end
 
 end
