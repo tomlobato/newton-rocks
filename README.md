@@ -9,7 +9,7 @@ Gem mittsu: https://github.com/jellymann/mittsu
 ./solar.rb
 ```
 
-# Background
+# Ref
 
 [Feynman Lectures - Gravitation](http://www.feynmanlectures.caltech.edu/I_09.html#Ch9-S7)
 
