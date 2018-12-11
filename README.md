@@ -1,6 +1,3 @@
-# solar_system_mechanic
-
-Solar system mechanics simulator
 
 # Dependencies
 
