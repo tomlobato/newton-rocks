@@ -70,9 +70,7 @@ class Solar
         @astros = []
 
         @mechanics.info.each_pair do |k, info|
-            diameter = DIAMETER_FACTOR[k] * info[:diameter] / DIAMETER_SCALE
-
-            geometry = Mittsu::SphereGeometry.new(diameter, 32, 16)
+            geometry = Mittsu::SphereGeometry.new(diameter(k, info), 32, 16)
             texture = Mittsu::ImageUtils.load_texture(File.join File.dirname(__FILE__), "./assets/#{k}.png")
             material = Mittsu::MeshLambertMaterial.new(map: texture)
 
@@ -83,6 +81,10 @@ class Solar
         end
     end
 
+    def diameter name, info
+        DIAMETER_FACTOR[name] * info[:diameter] / DIAMETER_SCALE
+    end
+
     def normalize_orbit
         largest_orbit = 0
         @mechanics.info.each_value{|v| 
@@ -90,7 +92,7 @@ class Solar
                 largest_orbit = v[:distance_to_sun]
             end
         } 
-        largest_orbit / 20.0        
+        largest_orbit / 30.0        
     end
 
 end

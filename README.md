@@ -22,5 +22,16 @@ Gem mittsu: https://github.com/jellymann/mittsu
 ![Gravitational Force Equation](https://raw.githubusercontent.com/tomlobato/solar_system_mechanics/master/assets/gravity.png)
 
 
+# TODO
 
-      
+- Moons
+- Body rotation
+- Body inclination
+- Asteroid belt
+- Dwarf planets
+- Gather real initial conditions (position, velocity)
+- Configuration presets: 
+    - object choosing
+    - size overriding
+- Real clock
+- Motion by uniform time steps

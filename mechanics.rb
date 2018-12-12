@@ -4,8 +4,8 @@ class Mechanics
     G = 6.67408e-11
     # MOON MERCURY VENUS EARTH MARS JUPITER SATURN URANUS NEPTUNE PLUTO
     EXCLUDE_ASTROS = %w(MOON)
-    DT = 300 # Time step between loop iterations
-    LOOP_WAIT = 0.00001
+    DT = 3e2 # Time step between loop iterations
+    LOOP_WAIT = 1e-5
     DEBUG = false
 
     def initialize
