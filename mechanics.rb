@@ -2,11 +2,12 @@
 
 class Mechanics
     G = 6.67408e-11
-    # MOON MERCURY VENUS EARTH MARS JUPITER SATURN URANUS NEPTUNE PLUTO
-    EXCLUDE_ASTROS = %w(MOON)
-    DT = 3e2 # Time step between loop iterations
-    LOOP_WAIT = 1e-5
-    DEBUG = false
+    # MOON MERCURY VENUS EARTH MARS
+    EXCLUDE_ASTROS = %w(MOON JUPITER SATURN URANUS NEPTUNE PLUTO)
+    DT = 1e2 # Time step for iterations
+    IT_PER_SEC = 1e4
+    IT_TIME = 1 / IT_PER_SEC
+    DEBUG = true
 
     def initialize
         @info = load_info        
@@ -28,7 +29,7 @@ class Mechanics
         stat_cnt = 0
         stat = 0
         loop do |loop_num|
-            t0 = Time.now if DEBUG
+            t0 = Time.now #if DEBUG
             dat  = @dat[didx]
             dat2 = @dat[didx == 0 ? 1 : 0]
             
@@ -68,12 +69,19 @@ class Mechanics
             end
             
             didx = didx == 0 ? 1 : 0
+            it_time = Time.now - t0
             if DEBUG
-                stat += (Time.now - t0)
+                stat += it_time
                 stat_cnt += 1
-                puts (1e6*stat/stat_cnt) if stat_cnt % 1e5 == 0
+                puts (1e6*stat/stat_cnt) if stat_cnt % 1e4 == 0
             end
-            sleep LOOP_WAIT
+            if it_time > IT_TIME
+                $stderr.puts "it_time > IT_TIME #{it_time} #{IT_TIME}"
+                # exit 1
+            else
+                # puts "#{(IT_TIME - it_time)} #{IT_TIME} #{it_time}"
+                sleep (IT_TIME - it_time)
+            end
         end
     end
 

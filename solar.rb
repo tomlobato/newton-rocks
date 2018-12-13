@@ -7,7 +7,7 @@ class Solar
     SCREEN_WIDTH = 1600
     SCREEN_HEIGHT = 1200
     ASPECT = SCREEN_WIDTH.to_f / SCREEN_HEIGHT.to_f
-    DIAMETER_SCALE = 1e8
+    DIAMETER_SCALE = 1e7
     DIAMETER_FACTOR = {
         sun:     4e-3,
         mercury: 1,
