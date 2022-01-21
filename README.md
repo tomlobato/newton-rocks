@@ -12,6 +12,7 @@ Gem mittsu: https://github.com/jellymann/mittsu
 # Run
 
 ```bash
+sudo apt-get install libglfw3 # on ubuntu
 gem install mittsu
 ./solar.rb
 ```
