@@ -12,6 +12,7 @@ Gem mittsu: https://github.com/jellymann/mittsu
 # Run
 
 ```bash
+gem install mittsu
 ./solar.rb
 ```
 
